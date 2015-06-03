@@ -6,4 +6,7 @@
 
 class_name: FunctionalTester
 modules:
-    enabled: [Filesystem, FunctionalHelper,Laravel5]
+    enabled: [Filesystem,PhpBrowser,FunctionalHelper,Laravel5]
+    config:
+        PhpBrowser:
+            url: 'http://localhost:8000/'
