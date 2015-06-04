@@ -7,9 +7,29 @@
 class_name: AcceptanceTester
 modules:
     enabled:
-        - PhpBrowser
         - AcceptanceHelper
         - Laravel5
+        - WebDriver
+        - REST
     config:
-        PhpBrowser:
-            url: 'http://invoice_ninja.app:8000/'
+      WebDriver:
+            url: 'http://invoice_ninja.app/'
+            browser : firefox
+            wait: 2
+            capabilities:
+                unexpectedAlertBehaviour: 'accept'
+env:
+            phantom:
+                modules:
+                config:
+                    WebDriver:
+                      browser: 'firefox'
+            chrome:
+                modules:
+                config:
+                      WebDriver:
+                      browser: 'chrome'
+                      firefox:
+                      REST:
+                      url: 'http://invoice_ninja.app/'
+                      timeout: 10
