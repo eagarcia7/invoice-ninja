@@ -6,7 +6,7 @@
 
 class_name: FunctionalTester
 modules:
-    enabled: [Filesystem,PhpBrowser,FunctionalHelper,Laravel5]
+    enabled: [Filesystem, FunctionalHelper,Laravel5,PhpBrowser]
     config:
         PhpBrowser:
-            url: 'http://localhost:8000/'
+            url: 'http://invoice_ninja.app/'
