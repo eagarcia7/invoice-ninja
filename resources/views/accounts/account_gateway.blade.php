@@ -48,7 +48,7 @@
 
                 @if (in_array($field, $hiddenFields))
                     {{-- do nothing --}}
-                @elseif ($gateway->id == GATEWAY_DWOLLA && ($field == 'Key' || $field == 'Secret') 
+                @elseif ($gateway->id == GATEWAY_DWOLLA && ($field == 'key' || $field == 'secret') 
                     && isset($_ENV['DWOLLA_KEY']) && isset($_ENV['DWOLLA_SECRET']))
                     {{-- do nothing --}}
                 @elseif ($field == 'testMode' || $field == 'developerMode' || $field == 'sandbox') 
@@ -90,8 +90,8 @@
     <p/>&nbsp;<p/>
 
     {!! Former::actions( 
-        Button::success(trans('texts.save'))->submit()->large()->appendIcon(Icon::create('floppy-disk')),
-        $countGateways > 0 ? Button::normal(trans('texts.cancel'))->large()->asLinkTo(URL::to('/company/payments'))->appendIcon(Icon::create('remove-circle')) : false) !!}
+        $countGateways > 0 ? Button::normal(trans('texts.cancel'))->large()->asLinkTo(URL::to('/company/payments'))->appendIcon(Icon::create('remove-circle')) : false,
+        Button::success(trans('texts.save'))->submit()->large()->appendIcon(Icon::create('floppy-disk'))) !!}
     {!! Former::close() !!}
 
 

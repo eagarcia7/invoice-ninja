@@ -112,13 +112,13 @@
             {!! Button::success(trans('texts.save'))->large()->appendIcon(Icon::create('floppy-disk'))->withAttributes(['id' => 'save-button']) !!}            
             {!! Button::primary(trans('texts.stop'))->large()->appendIcon(Icon::create('stop'))->withAttributes(['id' => 'stop-button']) !!}            
         @else
+            {!! Button::normal(trans('texts.cancel'))->large()->asLinkTo(URL::to('/tasks'))->appendIcon(Icon::create('remove-circle')) !!}
             @if ($task)
                 {!! Button::success(trans('texts.save'))->large()->appendIcon(Icon::create('floppy-disk'))->withAttributes(['id' => 'save-button']) !!}
             @else
                 {!! Button::success(trans('texts.start'))->large()->appendIcon(Icon::create('play'))->withAttributes(['id' => 'start-button']) !!}
                 {!! Button::success(trans('texts.save'))->large()->appendIcon(Icon::create('floppy-disk'))->withAttributes(['id' => 'save-button', 'style' => 'display:none']) !!}
             @endif
-            {!! Button::normal(trans('texts.cancel'))->large()->asLinkTo(URL::to('/tasks'))->appendIcon(Icon::create('remove-circle')) !!}
         @endif
     </center>
 
@@ -180,7 +180,6 @@
     }
 
     $(function() {
-
         var $clientSelect = $('select#client');     
         for (var i=0; i<clients.length; i++) {
             var client = clients[i];
@@ -201,7 +200,7 @@
             $('#start_hours').val((date.getHours() % 12) || 12);
             $('#start_minutes').val(date.getMinutes());
             $('#start_seconds').val(date.getSeconds());
-            $('#start_ampm').val(date.getHours() > 12 ? 'PM' : 'AM');
+            $('#start_ampm').val(date.getHours() >= 12 ? 'PM' : 'AM');
         @endif
 
         @if (!$task && !$clientPublicId)
@@ -210,9 +209,9 @@
             $('#amount').focus();
         @endif
 
-        $('input[type=radio').change(function(event) {
+        $('input[type=radio]').change(function(event) {
             var val = $(event.target).val();
-            if (val == 'now') {
+            if (val == 'timer') {
                 $('#datetime-details').hide();
             } else {
                 $('#datetime-details').fadeIn();        

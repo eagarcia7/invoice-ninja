@@ -20,7 +20,7 @@
 
     <link href="//fonts.googleapis.com/css?family=Roboto:400,700,900,100" rel="stylesheet" type="text/css">
     <link href="//fonts.googleapis.com/css?family=Roboto+Slab:400,300,700" rel="stylesheet" type="text/css">
-    <link href="{{ asset('favicon.png') }}" rel="shortcut icon">
+    <link href="{{ asset('favicon.png?test') }}" rel="shortcut icon">
     <link rel="canonical" href="{{ NINJA_APP_URL }}/{{ Request::path() }}" />
 
     <script src="{{ asset('js/built.js') }}?no_cache={{ NINJA_VERSION }}" type="text/javascript"></script>    
@@ -109,6 +109,10 @@
         $('form.warn-on-exit input, form.warn-on-exit textarea, form.warn-on-exit select').change(function() {
             NINJA.formIsChanged = true;      
         }); 
+
+        @if (Session::has('trackEventCategory') && Session::has('trackEventAction'))
+            trackEvent('{{ session('trackEventCategory') }}', '{{ session('trackEventAction') }}');            
+        @endif
     });
     $('form').submit(function() {
         NINJA.formIsChanged = false;
@@ -124,7 +128,6 @@
         trackEvent('/view_link', track ? track : url);
         window.open(url, '_blank');
     }
-
 
 //$('a[rel!=ext]').click(function() { $(window).off('beforeunload') });
 </script> 

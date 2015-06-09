@@ -83,7 +83,8 @@
 				{!! Former::text('due_date')->data_bind("datePicker: due_date, valueUpdate: 'afterkeydown'")
 							->data_date_format(Session::get(SESSION_DATE_PICKER_FORMAT, DEFAULT_DATE_PICKER_FORMAT))->append('<i class="glyphicon glyphicon-calendar" onclick="toggleDatePicker(\'due_date\')"></i>') !!}							
                 
-                {!! Former::text('partial')->data_bind("value: partial, valueUpdate: 'afterkeydown'")->onchange('onPartialChange()') !!}
+                {!! Former::text('partial')->data_bind("value: partial, valueUpdate: 'afterkeydown'")->onchange('onPartialChange()')
+                            ->rel('tooltip')->data_toggle('tooltip')->data_placement('bottom')->title(trans('texts.partial_value')) !!}
 			</div>
 			@if ($entityType == ENTITY_INVOICE)
 				<div data-bind="visible: is_recurring" style="display: none">
@@ -313,7 +314,7 @@
 			{!! Former::populateField('entityType', $entityType) !!}
 			{!! Former::text('entityType') !!}
 			{!! Former::text('action') !!}
-            {!! Former::text('data')->data_bind("value: ko.mapping.toJSON(model)") !!}    
+            {!! Former::text('data')->data_bind("value: ko.mapping.toJSON(model)") !!}
             {!! Former::text('pdfupload') !!}    
 				
 			@if ($invoice && $invoice->id)
@@ -332,52 +333,19 @@
 		{!! Button::primary(trans('texts.download_pdf'))->withAttributes(array('onclick' => 'onDownloadClick()'))->appendIcon(Icon::create('download-alt')) !!}	
         
 		@if (!$invoice || (!$invoice->trashed() && !$invoice->client->trashed()))
-			@if ($invoice && $invoice->id)		
 
-				<div id="primaryActions" style="text-align:left" class="btn-group dropup">
-					<button class="btn-success btn" type="button">{{ trans("texts.save_{$entityType}") }}</button>
-					<button class="btn-success btn dropdown-toggle" type="button" data-toggle="dropdown"> 
-						<span class="caret"></span>
-					</button>
-					<ul class="dropdown-menu">
-						<li><a href="javascript:onSaveClick()" id="saveButton">{{ trans("texts.save_{$entityType}") }}</a></li>
-						<li><a href="javascript:onCloneClick()">{{ trans("texts.clone_{$entityType}") }}</a></li>
-                        <li><a href="{{ URL::to("{$entityType}s/{$entityType}_history/{$invoice->public_id}") }}">{{ trans("texts.view_history") }}</a></li>
-                        <li class="divider"></li>                            
-
-                        @if ($invoice->invoice_status_id < INVOICE_STATUS_SENT && !$invoice->is_recurring)
-                            <li><a href="javascript:onMarkClick()">{{ trans("texts.mark_sent") }}</a></li>
-                        @endif
-
-						@if ($invoice && $entityType == ENTITY_QUOTE)			
-							@if ($invoice->quote_invoice_id)
-								<li><a href="{{ URL::to("invoices/{$invoice->quote_invoice_id}/edit") }}">{{ trans("texts.view_invoice") }}</a></li>
-							@else
-								<li><a href="javascript:onConvertClick()">{{ trans("texts.convert_to_invoice") }}</a></li>
-							@endif
-						@elseif ($invoice && $entityType == ENTITY_INVOICE)
-							@if ($invoice->quote_id)
-								<li><a href="{{ URL::to("quotes/{$invoice->quote_id}/edit") }}">{{ trans("texts.view_quote") }}</a></li>
-							@endif
-						@endif
-
-						<li class="divider"></li>
-						<li><a href="javascript:onArchiveClick()">{{ trans("texts.archive_{$entityType}") }}</a></li>
-						<li><a href="javascript:onDeleteClick()">{{ trans("texts.delete_{$entityType}") }}</a></li>
-					</ul>
-				</div>		
-
-			@else
-				{!! Button::success(trans("texts.save_{$entityType}"))->withAttributes(array('id' => 'saveButton', 'onclick' => 'onSaveClick()'))->appendIcon(Icon::create('floppy-disk')) !!}
-			@endif
+			{!! Button::success(trans("texts.save_{$entityType}"))->withAttributes(array('id' => 'saveButton', 'onclick' => 'onSaveClick()'))->appendIcon(Icon::create('floppy-disk')) !!}
 
             @if (!$invoice || ($invoice && !$invoice->is_recurring))
-			 {!! Button::normal(trans("texts.email_{$entityType}"))->withAttributes(array('id' => 'email_button', 'onclick' => 'onEmailClick()'))->appendIcon(Icon::create('send')) !!}
+			     {!! Button::info(trans("texts.email_{$entityType}"))->withAttributes(array('id' => 'email_button', 'onclick' => 'onEmailClick()'))->appendIcon(Icon::create('send')) !!}
             @endif
 
-			@if ($invoice && $invoice->id && $entityType == ENTITY_INVOICE && !$invoice->is_recurring && $invoice->balance > 0)
-				{!! Button::primary(trans('texts.enter_payment'))->withAttributes(array('onclick' => 'onPaymentClick()'))->appendIcon(Icon::create('usd')) !!}		
-			@endif
+            @if ($invoice && $invoice->id)                
+                {!! DropdownButton::normal(trans('texts.more_actions'))
+                      ->withContents($actions)
+                      ->dropup() !!}
+            @endif            
+
 		@elseif ($invoice && $invoice->trashed() && !$invoice->is_deleted == '1')
 			{!! Button::success(trans('texts.restore'))->withAttributes(['onclick' => 'submitAction("restore")'])->appendIcon(Icon::create('cloud-download')) !!}
 		@endif
@@ -597,7 +565,7 @@
 			}
 		});
 
-		$('[rel=tooltip]').tooltip();
+		$('[rel=tooltip]').tooltip({'trigger':'manual'});
 
 		$('#invoice_date, #due_date, #start_date, #end_date').datepicker();
 
@@ -663,10 +631,6 @@
 			onPaymentClick();
 		});
 
-		$('#primaryActions > button:first').click(function() {
-			onSaveClick();
-		});
-
 		$('label.radio').addClass('radio-inline');
 
 		applyComboboxListeners();
@@ -722,10 +686,10 @@
 
         @if (!$invoice)
             if (!invoice.terms) {
-                invoice.terms = wordWrapText('{{ str_replace(["\r\n","\r","\n"], '\n', addslashes($account->invoice_terms)) }}', 300);
+                invoice.terms = wordWrapText('{!! str_replace(["\r\n","\r","\n"], '\n', addslashes($account->invoice_terms)) !!}', 300);
             }
             if (!invoice.invoice_footer) {
-                invoice.invoice_footer = wordWrapText('{{ str_replace(["\r\n","\r","\n"], '\n', addslashes($account->invoice_footer)) }}', 600);
+                invoice.invoice_footer = wordWrapText('{!! str_replace(["\r\n","\r","\n"], '\n', addslashes($account->invoice_footer)) !!}', 600);
             }
         @endif
 
@@ -770,14 +734,14 @@
 	}
 
 	function onEmailClick() {
-		if (confirm('{{ trans("texts.confirm_email_$entityType") }}')) {
+		if (confirm('{!! trans("texts.confirm_email_$entityType") !!}')) {
 			preparePdfData('email');
 		}
 	}
 
 	function onSaveClick() {
 		if (model.invoice().is_recurring()) {
-			if (confirm('{{ trans("texts.confirm_recurring_email_$entityType") }}')) {
+			if (confirm('{!! trans("texts.confirm_recurring_email_$entityType") !!}')) {
 				submitAction('');
 			}
 		} else {
@@ -802,6 +766,7 @@
 			model.showClientForm();
 			return;
 		}
+        onPartialChange(true);
 		$('#action').val(value);
 		$('#submitButton').click();
 	}
@@ -866,7 +831,7 @@
 	}
 
 	function onDeleteClick() {
-		if (confirm('Are you sure you want to delete this {{ $entityType }}?')) {
+        if (confirm('{!! trans("texts.are_you_sure") !!}')) {		
 			submitAction('delete');		
 		}		
 	}
@@ -1127,10 +1092,10 @@
 		self.frequency_id = ko.observable('');
 		//self.currency_id = ko.observable({{ $client && $client->currency_id ? $client->currency_id : Session::get(SESSION_CURRENCY) }});
         self.terms = ko.observable('');
-        self.default_terms = ko.observable({{ !$invoice && $account->invoice_terms ? 'true' : 'false' }} ? wordWrapText('{{ str_replace(["\r\n","\r","\n"], '\n', addslashes($account->invoice_terms)) }}', 300) : '');
+        self.default_terms = ko.observable({{ !$invoice && $account->invoice_terms ? 'true' : 'false' }} ? wordWrapText('{!! str_replace(["\r\n","\r","\n"], '\n', addslashes($account->invoice_terms)) !!}', 300) : '');
         self.set_default_terms = ko.observable(false);
         self.invoice_footer = ko.observable('');
-        self.default_footer = ko.observable({{ !$invoice && $account->invoice_footer ? 'true' : 'false' }} ? wordWrapText('{{ str_replace(["\r\n","\r","\n"], '\n', addslashes($account->invoice_footer)) }}', 600) : '');
+        self.default_footer = ko.observable({{ !$invoice && $account->invoice_footer ? 'true' : 'false' }} ? wordWrapText('{!! str_replace(["\r\n","\r","\n"], '\n', addslashes($account->invoice_footer)) !!}', 600) : '');
         self.set_default_footer = ko.observable(false);
 		self.public_notes = ko.observable('');		
 		self.po_number = ko.observable('');
@@ -1664,11 +1629,19 @@
 		}
 	}
 
-    function onPartialChange()
+    function onPartialChange(silent)
     {
         var val = NINJA.parseFloat($('#partial').val());
+        var oldVal = val;
         val = Math.max(Math.min(val, model.invoice().totals.rawTotal()), 0);
-        $('#partial').val(val || '');
+        model.invoice().partial(val || '');
+        
+        if (!silent && val != oldVal) {
+            $('#partial').tooltip('show');
+            setTimeout(function() {
+                $('#partial').tooltip('hide');
+            }, 5000);
+        }
     }
 
     function onRecurringEnabled()
