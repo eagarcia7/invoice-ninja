@@ -5,12 +5,9 @@ $I->wantTo('Check if all pages are working');
 
 $I->amOnPage('/login');
 $I->see('Forgot your password?');
-$I->fillField(['name' => 'email'], 'test@email.com');
-$I->fillField(['name' => 'password'], 'password');
+$I->fillField(['name' => 'email'], 'webmaster@email.com');
+$I->fillField(['name' => 'password'], '2Werty4');
 $I->click('Let’s go');
-$I->seeResponseCodeIs(200);
-
-$I->amOnPage('/startup');
 $I->seeResponseCodeIs(200);
 
 $I->amOnPage('/dashboard/');

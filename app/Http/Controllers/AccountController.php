@@ -767,4 +767,6 @@ class AccountController extends BaseController
 
         return Redirect::to('/company/details')->with('message', trans('texts.confirmation_resent'));
     }
+
+
 }
