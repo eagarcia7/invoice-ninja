@@ -5,6 +5,11 @@ use App\Models\Size;
 use App\Models\Industry;
 use App\Models\Country;
 use App\Models\Client;
+use App\Models\Language;
+use App\Models\Timezone;
+use App\Models\DateFormat;
+use App\Models\DatetimeFormat;
+use App\Models\GateWay;
 
 class fixtures {
 
@@ -13,18 +18,72 @@ class fixtures {
 		return Client::all()->random(1);
 	}
 
-	function getData(){
+	function getCurrency(){
 
+		$data = Currency::orderBy('name')->lists('name', 'id')->toArray();
 
-		$data['currencies'] = Currency::orderBy('name')->lists('name', 'id');
+		return $data;
+	}
 
-		$data['paymentTerms'] = PaymentTerm::orderBy('num_days')->lists( 'name','num_days');
+	function getLanguage(){
+		
+		$data = Language::orderBy('name')->lists('name', 'id')->toArray();
 
-		$data['sizes'] = Size::orderBy('id')->lists( 'name','id');
+		return $data;
+	}
 
-		$data['industries'] = Industry::orderBy('name')->lists( 'name','id');
+	function getPaymentTerms(){
 
-		$data['countries'] = Country::orderBy('name')->lists( 'name','id');
+		$data = PaymentTerm::orderBy('num_days')->lists( 'name','num_days')->toArray();
+
+		return $data;
+	}
+
+	function getSizes(){
+
+		$data = Size::orderBy('id')->lists( 'name','id')->toArray();
+
+		return $data;
+	}
+
+	function getIndustry(){
+
+		$data = Industry::orderBy('name')->lists( 'name','id')->toArray();
+
+		return $data;
+	}
+
+	function getCountries(){
+
+		$data = Country::orderBy('name')->lists( 'name','id')->toArray();
+
+		return $data;
+	}
+
+	function getTimezones(){
+
+		$data = Timezone::orderBy('name')->lists( 'name','id')->toArray();
+
+		return $data;
+	}
+
+	function getDateFormat(){
+
+		$data = DateFormat::orderBy('label')->lists( 'label','id')->toArray();
+
+		return $data;
+	}
+
+	function getDatetimeFormat(){
+
+		$data = DatetimeFormat::orderBy('label')->lists( 'label','id')->toArray();
+
+		return $data;
+	}
+
+	function getGateways(){
+
+		$data = GateWay::orderBy('label')->lists( 'name','id')->toArray();
 
 		return $data;
 	}

@@ -9,4 +9,7 @@ $I->checkIfLogin($I);
 
 $I->amOnPage('/clients');
 $I->seeCurrentUrlEquals('/clients');
-$I->seeResponseCodeIs(200);
+
+$I->click('.dropdown-toggle');
+
+$I->click('Delete client');

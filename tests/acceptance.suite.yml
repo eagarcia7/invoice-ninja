@@ -17,21 +17,7 @@ modules:
      WebDriver:
            url: 'http://invoice_ninja.app/'
            browser : firefox
+           window_size: 1024x768
            wait: 2
            capabilities:
                unexpectedAlertBehaviour: 'accept'
-env:
-           phantom:
-               modules:
-               config:
-                   WebDriver:
-                     browser: 'firefox'
-           chrome:
-               modules:
-               config:
-                     WebDriver:
-                     browser: 'firefox'
-                     firefox:
-                     REST:
-                     url: 'http://invoice_ninja.app/'
-                     timeout: 10

@@ -39,8 +39,6 @@
             {!! Former::select('client')->addOption('', '')->addGroupClass('client-select') !!}
             {!! Former::textarea('description')->rows(3) !!}
 
-            <input type="text" name="description_edit" >
-
             @if ($task && $task->duration == -1)
                 <center>                    
                     <div id="duration-text" style="font-size: 36px; font-weight: 300; padding: 30px 0 20px 0"/>

@@ -36,8 +36,8 @@ $I->fillField(['name' => 'state'],$faker->state);
 $I->see('Postal Code');
 $I->fillField(['name' => 'postal_code'], $faker->postcode);
 $I->see('Country');
-$country = $fixtures->getData();
-$random = array_rand($country['countries']);
+$country = $fixtures->getCountries();
+$random = array_rand($country);
 $I->selectOption("form select[name='country_id']", $random);
 
 //Contacts
@@ -51,23 +51,23 @@ $I->see('Phone');
 $I->fillField(['name' => 'phone'],$faker->phoneNumber);
 
 $I->see('Currency');
-$currency = $fixtures->getData();
-$random = array_rand($currency['currencies']);
+$currency = $fixtures->getCurrency();
+$random = array_rand($currency);
 $I->selectOption("form select[name='currency_id']", $random);
 
 $I->see('Payment Terms');
-$payments = $fixtures->getData();
-$random = array_rand($payments['paymentTerms']);
+$payments = $fixtures->getPaymentTerms();
+$random = array_rand($payments);
 $I->selectOption("form select[name='payment_terms']", $random);
 
 $I->see('Size');
-$sizes = $fixtures->getData();
-$random = array_rand($sizes['sizes']);
+$sizes = $fixtures->getSizes();
+$random = array_rand($sizes);
 $I->selectOption("form select[name='size_id']", $random);
 
 $I->see('Industry');
-$industry = $fixtures->getData();
-$random = array_rand($industry['industries']);
+$industry = $fixtures->getIndustry();
+$random = array_rand($industry);
 $I->selectOption("form select[name='industry_id']", $random);
 
 $I->see('Private Notes');
