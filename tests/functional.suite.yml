@@ -6,7 +6,14 @@
 
 class_name: FunctionalTester
 modules:
-    enabled: [Filesystem, FunctionalHelper,Laravel5,PhpBrowser]
+    enabled: [Filesystem, FunctionalHelper,Laravel5,PhpBrowser,Asserts,Db]
     config:
         PhpBrowser:
             url: 'http://invoice_ninja.app/'
+        Db:
+         dsn: 'mysql:host=homestead;dbname=ninja'
+         user: 'homestead'
+         password: 'secret'
+         dump: 'tests/_data/dump.sql'
+         populate: true
+         cleanup: false

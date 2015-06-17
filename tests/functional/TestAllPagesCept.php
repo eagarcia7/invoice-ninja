@@ -3,15 +3,12 @@ $I = new FunctionalTester($scenario);
 $I->am('a guest');
 $I->wantTo('Check if all pages are working');
 
-$I->amOnPage('/login');
-$I->see('Forgot your password?');
-$I->fillField(['name' => 'email'], 'webmaster@email.com');
-$I->fillField(['name' => 'password'], '2Werty4');
-$I->click('Let’s go');
+$I->checkIfLogin($I);
 $I->seeResponseCodeIs(200);
 
 $I->amOnPage('/dashboard/');
 $I->seeResponseCodeIs(200);
+// $I->assertTrue(Auth::check());
 
 $I->amOnPage('/clients');
 $I->see('Clients','li');
