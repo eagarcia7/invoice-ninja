@@ -10,6 +10,8 @@ use App\Models\Timezone;
 use App\Models\DateFormat;
 use App\Models\DatetimeFormat;
 use App\Models\GateWay;
+use App\Models\Product;
+use App\Models\AccountToken;
 
 class fixtures {
 
@@ -87,5 +89,31 @@ class fixtures {
 
 		return $data;
 	}
+
+	function getProduct($id,$random = false){
+
+		$data = Product::get()->first();
+
+		if ($random) {
+
+			$data = Product::all()->random(1);
+		}
+
+		return $data;
+	}
+
+	function getToken($id,$random = false) {
+
+		$data = AccountToken::get()->first();
+
+		if ($random) {
+
+			$data = AccountToken::all()->random(1);
+		}
+
+		return $data;
+
+	}
+
 }
 ?>
