@@ -1,6 +1,6 @@
 <?php 
 $I = new FunctionalTester($scenario);
-$I->wantTo('create an Invoice');
+$I->wantTo('Create an invoice');
 
 $I->checkIfLogin($I);
 $I->amOnPage('/invoices');

@@ -4,7 +4,8 @@ $I->wantTo('Check Product');
 
 $I->checkIfLogin($I);
 
-$I->amOnPage('/clients');
-$I->seeCurrentUrlEquals('/clients');
+$I->amOnPage('/company/products');
+$I->seeCurrentUrlEquals('/company/products');
+$I->seeResponseCodeIs(200);
 
-$I->click('Create Product');
+//$I->click('Create Product');
