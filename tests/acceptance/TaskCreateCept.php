@@ -20,4 +20,9 @@ $I->executeJS('return $("#description").attr("style","display:block")');
 
 $I->fillField('#description', $faker->realText);
 
-$I->click('#start-button');
+$I->submitForm('#start-button', array(
+	'#client' => $client->id ,
+	 '#description' => $faker->realText,
+	 ));
+//redirect to edit
+$I->click('Save');
