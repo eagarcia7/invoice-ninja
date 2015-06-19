@@ -9,29 +9,15 @@ modules:
     enabled:
         - AcceptanceHelper
         - Laravel5
-        - PhpBrowser
-#        - WebDriver
+ #       - PhpBrowser
+        - WebDriver
     config:
-        PhpBrowser:
-            url: 'http://invoice_ninja.app/'    
-#      WebDriver:
-#            url: 'http://invoice_ninja.app/'
-#            browser : firefox
-#            wait: 2
-#            capabilities:
-#                unexpectedAlertBehaviour: 'accept'
-#env:
- #           phantom:
- #               modules:
- #               config:
- #                   WebDriver:
- #                     browser: 'firefox'
- #           chrome:
- #               modules:
- #               config:
- #                     WebDriver:
- #                     browser: 'chrome'
- #                     firefox:
- #                     REST:
- #                     url: 'http://invoice_ninja.app/'
- #                     timeout: 10
+#        PhpBrowser:
+#           url: 'http://invoice_ninja.app/'    
+     WebDriver:
+           url: 'http://invoice_ninja.app/'
+           browser : firefox
+           window_size: 1024x768
+           wait: 2
+           capabilities:
+               unexpectedAlertBehaviour: 'accept'
