@@ -59,7 +59,6 @@ class InvoiceCreateCest
         //item 
 
         $I->fillField(['name' => 'product_key'],$faker->randomNumber(2));
-
         $I->fillField(['name' => 'public_notes'],$faker->realText);
 
         $I->click('#saveButton');
