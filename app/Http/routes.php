@@ -28,10 +28,6 @@ Route::get('update', 'AppController@update');
 
 // Public pages
 Route::get('/', 'HomeController@showIndex');
-
-//for codeception testing only
-Route::get('/startup', 'UserController@startup');
-
 Route::get('terms', 'HomeController@showTerms');
 Route::get('log_error', 'HomeController@logError');
 Route::get('invoice_now', 'HomeController@invoiceNow');
