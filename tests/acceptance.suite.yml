@@ -11,11 +11,18 @@ modules:
         - Laravel5
  #       - PhpBrowser
         - WebDriver
+        - Db
     config:
-#        PhpBrowser:
-#           url: 'http://invoice_ninja.app/'    
+     Db:
+           dsn: 'mysql:host=homestead;dbname=ninja'
+           user: 'homestead'
+           password: 'secret'
+           dump: 'tests/_data/dump.sql'
+           populate: true
+           cleanup: false
      WebDriver:
            url: 'http://invoice_ninja.app/'
+           host: 192.168.10.1 #selenium server ip
            browser : firefox
            window_size: 1024x768
            wait: 2
