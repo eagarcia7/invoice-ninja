@@ -4,7 +4,7 @@ require_once __DIR__ . '/../helpers/Helper.php';
 use \AcceptanceTester;
 use Faker\Factory;
 
-class InvoiceCest
+class QuoteCest
 {
     /**
      * @var \Faker\Generator
@@ -22,29 +22,26 @@ class InvoiceCest
     {
     }
 
-    public function indexInvoice(AcceptanceTester $I)
+    public function indexQuote(AcceptanceTester $I)
     {
-        $I->wantTo('list invoices');
+        $I->wantTo('List quotes');
 
-        $I->amOnPage('/invoices');
-        $I->seeCurrentUrlEquals('/invoices');
+        $I->amOnPage('/quotes');
+        $I->seeCurrentUrlEquals('/quotes');
 
-        $random_invoice_number = Helper::getRandom('Invoice', 'invoice_number', [
-            'is_quote' => 0,
-            'is_recurring' => false
-        ]);
+        $random_quote_number = Helper::getRandom('Invoice', 'invoice_number', ['is_quote' => 1, 'is_recurring' => false]);
 
-        if ($random_invoice_number) {
+        if ($random_quote_number) {
             $I->wait(2);
-            $I->see($random_invoice_number);
+            $I->see($random_quote_number);
         }
     }
 
-    public function createInvoice(AcceptanceTester $I)
+    public function createQuote(AcceptanceTester $I)
     {
-        $I->wantTo('create a new Invoice');
+        $I->wantTo('Create a new Invoice');
 
-        $I->amOnPage('/invoices/create');
+        $I->amOnPage('/quotes/create');
 
         $I->selectDataPicker($I, '#invoice_date');
         $I->selectDataPicker($I, '#due_date', '+ 15 day');
@@ -62,74 +59,35 @@ class InvoiceCest
         $I->click('#saveButton');
     }
 
-    public function createRecurrentInvoice(AcceptanceTester $I)
+    public function editQuote(AcceptanceTester $I)
     {
-        $I->wantTo('create a new invoice (with recurring enabled)');
+        $I->wantTo('Edit a new invoice');
 
-        $I->amOnPage('/invoices/create');
-
-        $I->checkOption('#recurring');
-        $I->selectOption('#frequency_id', Helper::getRandom('Frequency'));
-        $I->selectDataPicker($I, '#start_date');
-        $I->selectDataPicker($I, '#end_date', '+ 1 week');
-
-        if (!$this->selectRandomClient($I)) {
-            //Create a new Client if not exist
-            $this->createClient($I);
-        }
-
-        $I->fillField('#po_number', rand(100, 200));
-        $I->fillField('#discount', rand(0, 20));
-
-        $this->fillItems($I);
-
-        $I->click('#saveButton');
-        $I->acceptPopup();
-
-    }
-
-    public function editInvoice(AcceptanceTester $I)
-    {
-        $I->wantTo('edit a new invoice');
-
-        $invoice = Helper::getRandom('Invoice', 'all', ['is_quote' => 0]);
-        $I->amOnPage(sprintf('/invoices/%s/edit', $invoice['public_id']));
+        $invoice = Helper::getRandom('Invoice', 'all', ['is_quote' => 1]);
+        $I->amOnPage(sprintf('/quotes/%s/edit', $invoice['public_id']));
 
         //change po_number with random number
         $po_number = rand(100, 300);
         $I->fillField('po_number', $po_number);
 
         //save
-        $I->click('Save Invoice');
+        $I->click('Save Quote');
         if ($invoice['is_recurring']) $I->acceptPopup();
         $I->wait(5);
 
         //check if po_number was updated
-        $I->seeInDatabase('invoices', ['po_number' => $po_number]);
+        $I->seeInDatabase('invoices', ['public_id'=> $invoice['public_id'], 'po_number' => $po_number]);
     }
 
-    public function cloneInvoice(AcceptanceTester $I)
+    public function deleteQuote(AcceptanceTester $I)
     {
-        $I->wantTo('clone an invoice');
+        $I->wantTo('Delete an invoice');
 
-        $invoice = Helper::getRandom('Invoice', 'all');
-        $I->amOnPage(sprintf('invoices/%d/clone', $invoice['public_id']));
-        $I->click('#saveButton');
-
-        $I->seeNumRecords(2, 'invoices', ['balance' => $invoice['balance']]);
-
-        $this->fillItems($I);
-    }
-
-    public function deleteInvoice(AcceptanceTester $I)
-    {
-        $I->wantTo('delete an invoice');
-
-        $I->amOnPage('/invoices');
-        $I->seeCurrentUrlEquals('/invoices');
+        $I->amOnPage('/quotes');
+        $I->seeCurrentUrlEquals('/quotes');
 
         //delete invoice
-        $I->executeJS(sprintf('deleteEntity(%d)', $id = Helper::getRandom('Invoice', 'public_id', ['is_quote' => 0])));
+        $I->executeJS(sprintf('deleteEntity(%d)', $id = Helper::getRandom('Invoice', 'public_id', ['is_quote' => 1])));
         $I->acceptPopup();
         $I->wait(5);
 
