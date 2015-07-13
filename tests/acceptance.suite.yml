@@ -9,9 +9,9 @@ modules:
     enabled:
         - AcceptanceHelper
         - Laravel5
- #       - PhpBrowser
         - WebDriver
         - Db
+        - MailCatcher
     config:
      Db:
            dsn: 'mysql:host=homestead;dbname=ninja'
@@ -25,6 +25,9 @@ modules:
            host: 192.168.10.1 #selenium server ip
            browser : firefox
            window_size: 1024x768
-           wait: 2
+           wait: 0
            capabilities:
                unexpectedAlertBehaviour: 'accept'
+     MailCatcher:
+           url: 'http://localhost/'
+           port: '1080'

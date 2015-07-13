@@ -40,7 +40,8 @@
         "mach-kernel/omnipay-dwolla": "dev-master",
 		"codeception/codeception": "~2.0",
 		"fzaninotto/faker": "^1.5",
-		"dwolla/omnipay-dwolla": "^1.1"
+		"dwolla/omnipay-dwolla": "^1.1",
+		"captbaritone/mailcatcher-codeception-module": "^1.1"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "~4.0",

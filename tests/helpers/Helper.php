@@ -2,19 +2,27 @@
 
 class Helper {
 
-    public static function getRandom($model, $attr = 'id') {
+    public static function getRandom($model, $attr = 'id', array $where = null) {
         $namespace = '\\App\\Models\\'.$model;
-        if ($attr == 'all') {
-            return self::getRandomModel(new $namespace());
-        }
-        return self::getRandomModel(new $namespace())[$attr];
+
+        $entity = self::getRandomModel(new $namespace(), $where);
+
+        if (!$entity) return false;
+
+        return($attr == 'all')? $entity : $entity[$attr];
     }
 
-    private static function getRandomModel(\Eloquent $model) {
-        $entities = $model::all()->toArray();
-        if (empty($entities)) {
-            throw new \Exception("Model doesn't contain data");
+    private static function getRandomModel($model, array $where = null) {
+        $entities = $model::all();
+
+        if ($where) {
+            foreach ($where as $key => $value) {
+                $entities = $entities->where($key, $value);
+            }
         }
-        return $entities[array_rand($entities)];
+
+        $entities = $entities->toArray();
+
+        return empty($entities) ? false : $entities[array_rand($entities)];
     }
 }
