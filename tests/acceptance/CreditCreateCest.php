@@ -1,55 +1,49 @@
 <?php
-require 'fixtures.php';
+require_once __DIR__ . '/../helpers/Helper.php';
+
 use \AcceptanceTester;
-//use \fixtures;
+use Faker\Factory;
 
 class CreditCreateCest
 {
+    private $faker;
+
     public function _before(AcceptanceTester $I)
     {
         $I->checkIfLogin($I);
+
+        $this->faker = Factory::create();
     }
 
     public function _after(AcceptanceTester $I)
     {
-
     }
 
-    // tests
-    public function CreateCreditTest(AcceptanceTester $I)
-    {   
-
-        $fixtures = New fixtures;
-        $faker = Faker\Factory::create();
+    public function createCredit(AcceptanceTester $I)
+    {
+        $I->wantTo('Enter a new Credit');
 
         $I->amOnPage('/credits/create');
-        $I->seeCurrentUrlEquals('/credits/create');
 
-        $client = $fixtures->getRandomClient();
-        $clientId = $client->id;
+        $opt_client = 2;
+        $amount = $this->faker->numberBetween(50, 200);
+        $date = 'now + 1 day';
+        $private_notes = $this->faker->text(50);
 
-       // $I->click('.dropdown-toggle');
+        $I->click('.client-select .combobox-container span.dropdown-toggle');
+        $I->click('.client-select .combobox-container ul li:nth-child('.$opt_client.')');
+        $id_client = $I->executeJS('return $("input[name=client]").val()');
 
-        $I->executeJS('return $(".dropdown-menu").attr("style","display:block")');
+        $I->fillField(['name' => 'amount'], $amount);
 
-        //$I->click('.dropdown-menu li');
+        $I->selectDataPicker($I, '#credit_date', 'now + 1 day');
 
-       // $I->executeJS('return $("#amount).attr("style","display:block")');
+        $I->fillField(['name' => 'private_notes'], $private_notes);
 
-        $I->fillField('#amount',$faker->randomFloat(2,1,100));
+        $I->click('.btn-success');
 
-        $I->fillField('#private_notes',$faker->realText);
+        $I->seeCurrentUrlEquals('/clients/'.$id_client);
 
-        $I->click('#credit_date');
-
-        //$I->click('.datepicker-days td.day');
-
-        $I->executeJS('return $("input[name=client]").attr("type","text")');
-
-        $I->submitForm('.warn-on-exit', 
-            array('amount' => $faker->randomFloat(2,1,100),
-                  'private_notes' => $faker->realText,
-                  'credit_date' => $faker->date($format = 'M j, Y'),
-                  'client' => $clientId ));
+        $I->seeInDatabase('credits', ['amount' => $amount]);
     }
 }

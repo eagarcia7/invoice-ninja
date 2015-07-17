@@ -34,6 +34,5 @@ class SignCest
         //Logout user
         $I->amOnPage('/logout');
         $I->seeCurrentUrlEquals('/login');
-
     }
 }

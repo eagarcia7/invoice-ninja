@@ -35,5 +35,7 @@ class ImportCest
 		$I->checkOption('header_checkbox');
 
 		$I->click('Import');
+
+        $I->seeCurrentUrlEquals('/clients');
 	}
 }

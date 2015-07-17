@@ -1,13 +1,18 @@
 <?php
-require 'fixtures.php';
+require_once __DIR__ . '/../helpers/Helper.php';
+
 use \AcceptanceTester;
-//use \fixtures;
+use Faker\Factory;
 
 class InvoiceDesignCest
 {
+    private $faker;
+
     public function _before(AcceptanceTester $I)
     {
         $I->checkIfLogin($I);
+
+        $this->faker = Factory::create();
     }
 
     public function _after(AcceptanceTester $I)
@@ -17,38 +22,33 @@ class InvoiceDesignCest
 
     // tests
     public function updateInvoiceDesign(AcceptanceTester $I)
-    {   
-
-        $fixtures = New fixtures;
-
-        $faker = Faker\Factory::create();
+    {
+        $I->wantTo('Design my invoice');
 
         $I->amOnPage('/company/advanced_settings/invoice_design');
 
-        $design = $fixtures->getInvoiceDesign(null,true);
-        
-        $I->selectOption('#invoice_design_id', $design->id);
-        
-        $I->fillField(['name' => 'font_size'],$faker->randomDigitNotNull);
+        $I->click('select#invoice_design_id');
+        $I->click('select#invoice_design_id option:nth-child(2)');
 
-        $I->executeJs('return $("#primary_color").attr("style:display:block")');
+        $I->click('#primary_color + .sp-replacer');
+        $I->executeJS('$("#primary_color").val("#7364b6")');
+        //$I->executeJS('$("#primary_color + .sp-replacer .sp-preview-inner").attr("style", "background-color: rgb(0,98,254);")');
+        $I->executeJS('$(".sp-container:nth-child(1) .sp-choose").click()');
 
-        //$I->fillField('#primary_color',$faker->hexcolor);
-        //$I->click('Save');
+        $I->click('#secondary_color + .sp-replacer');
+        $I->executeJS('$("#secondary_color").val("#aa6709")');
+        //$I->executeJS('$("#secondary_color + .sp-replacer .sp-preview-inner").attr("style", "background-color: rgb(254,0,50);")');
+        $I->executeJS('$(".sp-container:nth-child(2) .sp-choose").click()');
 
-        $I->fillField(['name' => 'labels_item'],$faker->word);
+        $I->fillField(['name' => 'labels_item'], $this->faker->text(6));
+        $I->fillField(['name' => 'labels_description'], $this->faker->text(12));
+        $I->fillField(['name' => 'labels_unit_cost'], $this->faker->text(12));
+        $I->fillField(['name' => 'labels_quantity'], $this->faker->text(8));
 
-        $I->fillField(['name' => 'labels_description'],$faker->realText);
-
-        $I->fillField(['name' => 'labels_unit_cost'],$faker->randomFloat(2, 1, 100));
-
-        $I->fillField(['name' => 'labels_quantity'],$faker->randomDigitNotNull);
-
-        $I->checkOption('#hide_quantity');
+        $I->uncheckOption('#hide_quantity');
 
         $I->checkOption('#hide_paid_to_date');
 
         $I->click('Save');
-
     }
 }
