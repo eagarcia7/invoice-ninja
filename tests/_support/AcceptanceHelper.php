@@ -23,4 +23,10 @@ class AcceptanceHelper extends \Codeception\Module
         $I->executeJS(sprintf('$(\'%s\').datepicker(\'update\', new Date(%s))', $element, $_date));
     }
 
+    function selectDropdown(\AcceptanceTester $I, $option, $dropdownSelector)
+    {
+        $I->click($dropdownSelector);
+        $I->click(sprintf('ul.typeahead li[data-value="%s"]', $option));
+    }
+
 }

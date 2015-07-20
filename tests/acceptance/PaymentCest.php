@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../helpers/Helper.php';
+
 use \AcceptanceTester;
 use Faker\Factory;
 
@@ -44,9 +46,9 @@ class PaymentCest
         $date = 'now + 1 day';
         $transaction_reference = $this->faker->text(12);
 
-        $I->click('.client-select .combobox-container span.dropdown-toggle');
-        $I->click('.client-select .combobox-container ul li:nth-child('.$opt_client.')');
-        $id_client = $I->executeJS('return $("input[name=client]").val()');
+        //select client
+        $client = Helper::getRandom('Client', 'all');
+        $I->selectDropdown($I,  $client['name'], '.client-select .dropdown-toggle');
 
         $I->click('.invoice-select .combobox-container span.dropdown-toggle');
         $I->click('.invoice-select .combobox-container ul li:nth-child('.$opt_invoice.')');
@@ -62,7 +64,7 @@ class PaymentCest
 
         $I->click('button.btn-success');
 
-        $I->seeCurrentUrlEquals('/clients/'.$id_client);
+        $I->seeCurrentUrlEquals('/clients/'.$client['public_id']);
     }
 
     public function edit(AcceptanceTester $I)
