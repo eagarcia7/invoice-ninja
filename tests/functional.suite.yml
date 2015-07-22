@@ -9,7 +9,7 @@ modules:
     enabled: [Filesystem, FunctionalHelper,Laravel5,PhpBrowser,Asserts,Db]
     config:
         PhpBrowser:
-            url: 'http://invoice_ninja.app/'
+            url: 'http://invoice-ninja.app/'
         Db:
          dsn: 'mysql:host=homestead;dbname=ninja'
          user: 'homestead'

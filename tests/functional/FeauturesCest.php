@@ -16,7 +16,7 @@ class FeauturesCept
     }
 
     // tests
-    public function CheckFeautures(FunctionalTester $I)
+    public function CheckFeatures(FunctionalTester $I)
     {   
 
 		$I->amOnPage('/features');

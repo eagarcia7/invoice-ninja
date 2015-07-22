@@ -1,13 +1,18 @@
 <?php
-require 'fixtures.php';
+require_once __DIR__ . '/../helpers/Helper.php';
+
 use \AcceptanceTester;
-//use \fixtures;
+use Faker\Factory;
 
 class ChartsAndReportsCest
 {
+    private $faker;
+
     public function _before(AcceptanceTester $I)
     {
-    	$I->checkIfLogin($I);
+        $I->checkIfLogin($I);
+
+        $this->faker = Factory::create();
     }
 
     public function _after(AcceptanceTester $I)
@@ -16,12 +21,14 @@ class ChartsAndReportsCest
     }
 
     // tests
-    public function UpdateChartsAndReportPage(AcceptanceTester $I)
+    public function updateChartsAndReportsPage(AcceptanceTester $I)
     {   
 
         $faker = Faker\Factory::create();
 
-        $fixtures = New fixtures;
+        //$fixtures = New fixtures;
+
+        $I->wantTo("Generate data and export file");
 
 		$I->amOnPage('/company/advanced_settings/charts_and_reports');
 		
@@ -31,9 +38,11 @@ class ChartsAndReportsCest
 
         $start_date =  date ( $format, strtotime ( '-7 day' . date('M d,Y'))); 
 
-        $I->fillField(['name' => 'start_date'],$start_date);
+        //$I->fillField(['name' => 'start_date'],$start_date);
+        $I->fillField(['name' => 'start_date'], 'April 15, 2015');
 
-        $I->fillField(['name' => 'end_date'],date('M d,Y'));
+        //$I->fillField(['name' => 'end_date'], date('M d,Y'));
+        $I->fillField(['name' => 'end_date'], 'August 29, 2015');
 
         $I->checkOption(['name' => 'enable_report']);
 
@@ -42,18 +51,67 @@ class ChartsAndReportsCest
         $I->checkOption(['name' => 'enable_chart']);
 
         $rand = ['DAYOFYEAR','WEEK','MONTH'];
-
-        $select = array_rand($rand);
-
-        $I->selectOption("#group_by", $rand[$select]);
+        $I->selectOption("#group_by", $rand[array_rand($rand)]);
 
         $rand = ['Bar','Line'];
+        $I->selectOption("#chart_type", $rand[array_rand($rand)]);
 
-        $select = array_rand($rand);
+        //$I->click('Export');
 
-        $I->selectOption("#chart_type", $rand[$select]);
+        $I->click('Run');
+    }
 
-        $I->click('Export');
+    public function showDataVisualization(AcceptanceTester $I) {
 
+        $I->wantTo('Display pdf data');
+
+        $I->amOnPage('/company/advanced_settings/data_visualizations');
+
+        $I->seeCurrentUrlEquals('/company/advanced_settings/data_visualizations');
+
+        $optionTest = "1";      // This is the option to test!
+
+        $I->selectOption('#groupBySelect', $optionTest);
+
+        $models = ['Client', 'Invoice', 'Product'];
+
+        //$all = Helper::getRandom($models[array_rand($models)], 'all');
+        $all = Helper::getRandom('Client', 'all');
+
+        $labels = $this->getLabels($optionTest);
+
+        $all_items = true;
+
+        $I->seeElement('div.svg-div svg g:nth-child(2)');
+
+        for ($i = 0; $i < count($labels); $i++) {
+
+            $text = $I->grabTextFrom('div.svg-div svg g:nth-child('.($i+2).') text');
+            //$I->seeInField('div.svg-div svg g:nth-child('.($i+2).') text', $labels[$i]);
+
+            if (!in_array($text, $labels)) {
+                $all_items = false;
+                break;
+            }
+        }
+
+        if (!$all_items) {
+            $I->see('Fail', 'Fail');
+        }
+    }
+
+    private function getLabels($option) {
+
+        $invoices = \App\Models\Invoice::where('user_id', '1')->get();
+        $clients = [];
+        foreach ($invoices as $invoice) {
+            $clients[] = \App\Models\Client::where('public_id', $invoice->client_id)->get();
+        }
+        $clientNames = [];
+        foreach ($clients as $client) {
+            $clientNames[] = $client[0]->name;
+        }
+
+        return $clientNames;
     }
 }

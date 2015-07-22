@@ -23,5 +23,13 @@ class LicenseCest
 		$I->seeCurrentUrlEquals('/license');
 		$I->seeResponseCodeIs(200);
 
+        if (!Session::get('affiliate_id')) {
+
+            $I->see('Something went wrong...');
+        }
+        else {
+
+            $I->see('Payments');
+        }
 	}
 }

@@ -20,7 +20,9 @@ class TokenManagementCest
     {   
 		$I->amOnPage('/company/advanced_settings/token_management');
 		$I->seeCurrentUrlEquals('/company/advanced_settings/token_management');
-		$I->seeResponseCodeIs(200);
 
+        $tokens = \App\Models\AccountToken::all()->toArray();
+        $num_tokens = count($tokens);
+        $I->seeElement('table#DataTables_Table_0 tbody tr:nth-child('.$num_tokens.')');
 	}
 }

@@ -7,8 +7,8 @@ namespace Codeception\Module;
 class FunctionalHelper extends \Codeception\Module
 {
 
-	function checkIfLogin($login)
-	{	
+	function checkIfLogin(\FunctionalTester $login)
+	{
 		$login->amOnPage('/login');
 		$login->fillField(['name' => 'email'], 'webmaster@email.com');
 		$login->fillField(['name' => 'password'], '2Werty4');

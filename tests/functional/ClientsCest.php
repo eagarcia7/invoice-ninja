@@ -7,6 +7,8 @@ class ClientsCest
 {
     public function _before(FunctionalTester $I)
     {
+        //$I->logout();
+
         $I->checkIfLogin($I);
     }
 
@@ -17,8 +19,7 @@ class ClientsCest
 
     // tests
     public function ShowClientList(FunctionalTester $I)
-    {   
-     
+    {
 		$I->amOnPage('/clients');
 		$I->seeCurrentUrlEquals('/clients');
 		$I->seeResponseCodeIs(200); 

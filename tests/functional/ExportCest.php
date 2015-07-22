@@ -3,7 +3,7 @@ require 'fixtures.php';
 use \FunctionalTester;
 //use \fixtures;
 
-class ExportCept
+class ExportCest
 {
     public function _before(FunctionalTester $I)
     {
