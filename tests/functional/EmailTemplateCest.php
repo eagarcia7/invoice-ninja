@@ -53,5 +53,6 @@ class EmailTemplateCest
 
 
         $I->click('Save');
+        $I->seeInDatabase('accounts', ['email_template_payment' => $message]);
     }
 }

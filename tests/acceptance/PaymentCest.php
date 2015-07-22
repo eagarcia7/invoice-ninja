@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../helpers/Helper.php';
 
 use \AcceptanceTester;
+use App\Models\Payment;
 use Faker\Factory;
 
 class PaymentCest
@@ -19,7 +20,6 @@ class PaymentCest
     {
     }
 
-    // tests
     public function showPayments(AcceptanceTester $I)
     {
         $I->wantTo("See all Payments");
@@ -27,10 +27,10 @@ class PaymentCest
         $I->amOnPage('/payments');
 
         $I->seeCurrentUrlEquals('/payments');
+        $I->wait(3);
 
-        $invoices = \App\Models\Invoice::all()->toArray();
-        $num_invoices = count($invoices);
-        $I->seeElement('table#DataTables_Table_0 tbody tr:nth-child('.$num_invoices.')');
+        //check number of payments
+        $I->seeNumberOfElements('tbody tr[role=row]', Payment::all()->count());
     }
 
     public function create(AcceptanceTester $I)
@@ -41,7 +41,7 @@ class PaymentCest
 
         $opt_client = 9;
         $opt_invoice = 1;
-        $amount = 5;
+        $amount = rand(1,100);
         $opt_payment_type = 7;
         $date = 'now + 1 day';
         $transaction_reference = $this->faker->text(12);
@@ -63,30 +63,59 @@ class PaymentCest
         $I->fillField(['name' => 'transaction_reference'], $transaction_reference);
 
         $I->click('button.btn-success');
+        $I->wait(3);
+        $I->seeInDatabase('payments', ['amount' => number_format($amount, 2)]);
 
         $I->seeCurrentUrlEquals('/clients/'.$client['public_id']);
     }
 
     public function edit(AcceptanceTester $I)
     {
-        $I->wantTo("Edit a Payment");
+        $I->wantTo("edit a Payment");
 
-        $payment_id = 2;
+        if ($payment_id = Helper::getRandom('Payment', 'public_id')) {
 
-        $I->amOnPage('/payments/'.$payment_id.'/edit');
+            $I->amOnPage('/payments/'.$payment_id.'/edit');
 
-        $opt_payment_type = 3;
-        $date = 'now + 1 day';
-        $transaction_reference = $this->faker->text(12);
+            $opt_payment_type = 3;
+            $date = 'now + 1 day';
+            $transaction_reference = $this->faker->text(12);
 
-        $I->click('div.panel-body div.form-group:first-child .combobox-container span.dropdown-toggle');
-        $I->click('div.panel-body div.form-group:first-child .combobox-container span.dropdown-toggle');
-        $I->click('div.panel-body div.form-group:first-child .combobox-container ul li:nth-child('.$opt_payment_type.')');
+            $I->click('div.panel-body div.form-group:first-child .combobox-container span.dropdown-toggle');
+            $I->click('div.panel-body div.form-group:first-child .combobox-container span.dropdown-toggle');
+            $I->click('div.panel-body div.form-group:first-child .combobox-container ul li:nth-child('.$opt_payment_type.')');
 
-        $I->selectDataPicker($I, '#payment_date', $date);
+            $I->selectDataPicker($I, '#payment_date', $date);
 
-        $I->fillField(['name' => 'transaction_reference'], $transaction_reference);
+            $I->fillField(['name' => 'transaction_reference'], $transaction_reference);
 
-        $I->click('Save');
+            $I->click('Save');
+            $I->wait(3);
+
+            //check if was saved
+            $I->seeInDatabase('payments', ['transaction_reference' => $transaction_reference]);
+        }
+    }
+
+    public function delete(AcceptanceTester $I)
+    {
+        $I->wantTo('delete a payment');
+
+        $I->amOnPage('/payments');
+        $I->seeCurrentUrlEquals('/payments');
+        $I->wait(3);
+
+        if ($num_payments = Payment::all()->count()) {
+            $row_rand = sprintf('tbody tr:nth-child(%d)', rand(1, $num_payments));
+            //show button
+            $I->executeJS(sprintf('$("%s div").css("visibility", "visible")', $row_rand));
+
+            //dropdown
+            $I->click($row_rand . ' button');
+
+            //click to delete button
+            $I->click($row_rand . ' ul li:nth-last-child(1) a');
+            $I->acceptPopup();
+        }
     }
 }

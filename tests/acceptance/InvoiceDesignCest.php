@@ -30,6 +30,8 @@ class InvoiceDesignCest
         $I->click('select#invoice_design_id');
         $I->click('select#invoice_design_id option:nth-child(2)');
 
+        $I->fillField('#font_size', 10);
+
         $I->click('#primary_color + .sp-replacer');
         $I->executeJS('$("#primary_color").val("#7364b6")');
         //$I->executeJS('$("#primary_color + .sp-replacer .sp-preview-inner").attr("style", "background-color: rgb(0,98,254);")');
@@ -50,5 +52,8 @@ class InvoiceDesignCest
         $I->checkOption('#hide_paid_to_date');
 
         $I->click('Save');
+        $I->wait(3);
+
+        $I->seeInDatabase('accounts', ['font_size' => 10]);
     }
 }

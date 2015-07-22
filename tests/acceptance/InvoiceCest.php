@@ -116,9 +116,19 @@ class InvoiceCest
         $I->amOnPage(sprintf('invoices/%d/clone', $invoice['public_id']));
         $I->click('#saveButton');
 
+        if ($invoice['is_recurring']) {
+            $I->acceptPopup();
+        }
+
+        $I->wait(3);
         $I->seeNumRecords(2, 'invoices', ['balance' => $invoice['balance']]);
 
         $this->fillItems($I);
+        $I->click('#saveButton');
+
+        if ($invoice['is_recurring']) {
+            $I->acceptPopup();
+        }
     }
 
     public function deleteInvoice(AcceptanceTester $I)
