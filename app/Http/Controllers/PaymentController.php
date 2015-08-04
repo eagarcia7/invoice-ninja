@@ -61,11 +61,12 @@ class PaymentController extends BaseController
         }
 
         $invitation = Invitation::with('account')->where('invitation_key', '=', $invitationKey)->first();
-        $color = $invitation->account->primary_color ? $invitation->account->primary_color : '#0b4d78';
+        $account = $invitation->account;
+        $color = $account->primary_color ? $account->primary_color : '#0b4d78';
         
         $data = [
             'color' => $color,
-            'hideLogo' => Session::get('white_label'),
+            'hideLogo' => $account->isWhiteLabel(),
             'entityType' => ENTITY_PAYMENT,
             'title' => trans('texts.payments'),
             'columns' => Utils::trans(['invoice', 'transaction_reference', 'method', 'payment_amount', 'payment_date'])
@@ -233,33 +234,41 @@ class PaymentController extends BaseController
 
     private function convertInputForOmnipay($input)
     {
-        $country = Country::find($input['country_id']);
-
-        return [
+        $data = [
             'firstName' => $input['first_name'],
             'lastName' => $input['last_name'],
             'number' => $input['card_number'],
             'expiryMonth' => $input['expiration_month'],
             'expiryYear' => $input['expiration_year'],
             'cvv' => $input['cvv'],
-            'billingAddress1' => $input['address1'],
-            'billingAddress2' => $input['address2'],
-            'billingCity' => $input['city'],
-            'billingState' => $input['state'],
-            'billingPostcode' => $input['postal_code'],
-            'billingCountry' => $country->iso_3166_2,
-            'shippingAddress1' => $input['address1'],
-            'shippingAddress2' => $input['address2'],
-            'shippingCity' => $input['city'],
-            'shippingState' => $input['state'],
-            'shippingPostcode' => $input['postal_code'],
-            'shippingCountry' => $country->iso_3166_2
         ];
+
+        if (isset($input['country_id'])) {
+            $country = Country::find($input['country_id']);
+
+            $data = array_merge($data, [
+                'billingAddress1' => $input['address1'],
+                'billingAddress2' => $input['address2'],
+                'billingCity' => $input['city'],
+                'billingState' => $input['state'],
+                'billingPostcode' => $input['postal_code'],
+                'billingCountry' => $country->iso_3166_2,
+                'shippingAddress1' => $input['address1'],
+                'shippingAddress2' => $input['address2'],
+                'shippingCity' => $input['city'],
+                'shippingState' => $input['state'],
+                'shippingPostcode' => $input['postal_code'],
+                'shippingCountry' => $country->iso_3166_2
+            ]);
+        }
+
+        return $data;
     }
 
     private function getPaymentDetails($invitation, $input = null)
     {
         $invoice = $invitation->invoice;
+        $account = $invoice->account;
         $key = $invoice->account_id.'-'.$invoice->invoice_number;
         $currencyCode = $invoice->client->currency ? $invoice->client->currency->code : ($invoice->account->currency ? $invoice->account->currency->code : 'USD');
 
@@ -285,16 +294,19 @@ class PaymentController extends BaseController
     }
 
     public function show_payment($invitationKey, $paymentType = false)
-    {        
+    {
         $invitation = Invitation::with('invoice.invoice_items', 'invoice.client.currency', 'invoice.client.account.account_gateways.gateway')->where('invitation_key', '=', $invitationKey)->firstOrFail();
         $invoice = $invitation->invoice;
         $client = $invoice->client;
         $account = $client->account;
         $useToken = false;
 
-        if (!$paymentType) {
-            $paymentType = $account->account_gateways[0]->getPaymentType();
-        } else if ($paymentType == PAYMENT_TYPE_TOKEN) {
+        if ($paymentType) {
+            $paymentType = 'PAYMENT_TYPE_' . strtoupper($paymentType);
+        } else {
+            $paymentType = Session::get('payment_type', $account->account_gateways[0]->getPaymentType());
+        }
+        if ($paymentType == PAYMENT_TYPE_TOKEN) {
             $useToken = true;
             $paymentType = PAYMENT_TYPE_CREDIT_CARD;
         }
@@ -324,9 +336,11 @@ class PaymentController extends BaseController
             'gateway' => $gateway,
             'acceptedCreditCardTypes' => $acceptedCreditCardTypes,
             'countries' => Cache::get('countries'),
-            'currencyId' => $client->currency_id,
+            'currencyId' => $client->getCurrencyId(),
+            'currencyCode' => $client->currency ? $client->currency->code : ($account->currency ? $account->currency->code : 'USD'),
             'account' => $client->account,
             'hideLogo' => $account->isWhiteLabel(),
+            'showAddress' => $accountGateway->show_address,
         ];
 
         return View::make('payments.payment', $data);
@@ -375,6 +389,7 @@ class PaymentController extends BaseController
             'currencyId' => 1,
             'paymentTitle' => $affiliate->payment_title,
             'paymentSubtitle' => $affiliate->payment_subtitle,
+            'showAddress' => true,
         ];
 
         return View::make('payments.payment', $data);
@@ -457,10 +472,11 @@ class PaymentController extends BaseController
             $this->contactMailer->sendLicensePaymentConfirmation($name, $license->email, $affiliate->price, $license->license_key, $license->product_id);
 
             if (Session::has('return_url')) {
-                return Redirect::away(Session::get('return_url')."?license_key={$license->license_key}&product_id=".Session::get('product_id'));
-            } else {
-                return View::make('public.license', $data);
+                $data['redirectTo'] = Session::get('return_url')."?license_key={$license->license_key}&product_id=".Session::get('product_id');
+                $data['message'] = "Redirecting to " . Session::get('return_url');
             }
+
+            return View::make('public.license', $data);
         } catch (\Exception $e) {
             $errorMessage = trans('texts.payment_error');
             Session::flash('error', $errorMessage);
@@ -494,19 +510,30 @@ class PaymentController extends BaseController
 
     public function do_payment($invitationKey, $onSite = true, $useToken = false)
     {
-        $rules = array(
+        $invitation = Invitation::with('invoice.invoice_items', 'invoice.client.currency', 'invoice.client.account.currency', 'invoice.client.account.account_gateways.gateway')->where('invitation_key', '=', $invitationKey)->firstOrFail();
+        $invoice = $invitation->invoice;
+        $client = $invoice->client;
+        $account = $client->account;
+        $accountGateway = $account->getGatewayByType(Session::get('payment_type'));
+
+        $rules = [
             'first_name' => 'required',
             'last_name' => 'required',
             'card_number' => 'required',
             'expiration_month' => 'required',
             'expiration_year' => 'required',
             'cvv' => 'required',
-            'address1' => 'required',
-            'city' => 'required',
-            'state' => 'required',
-            'postal_code' => 'required',
-            'country_id' => 'required',
-        );
+        ];
+
+        if ($accountGateway->show_address) {
+            $rules = array_merge($rules, [
+                'address1' => 'required',
+                'city' => 'required',
+                'state' => 'required',
+                'postal_code' => 'required',
+                'country_id' => 'required',
+            ]);
+        }
 
         if ($onSite) {
             $validator = Validator::make(Input::all(), $rules);
@@ -514,27 +541,22 @@ class PaymentController extends BaseController
             if ($validator->fails()) {
                 Utils::logError('Payment Error [invalid]');
                 return Redirect::to('payment/'.$invitationKey)
-                    ->withErrors($validator);
+                    ->withErrors($validator)
+                    ->withInput();
+            }
+
+
+            if ($accountGateway->update_address) {
+                $client->address1 = trim(Input::get('address1'));
+                $client->address2 = trim(Input::get('address2'));
+                $client->city = trim(Input::get('city'));
+                $client->state = trim(Input::get('state'));
+                $client->postal_code = trim(Input::get('postal_code'));
+                $client->country_id = Input::get('country_id');
+                $client->save();
             }
         }
-
-        $invitation = Invitation::with('invoice.invoice_items', 'invoice.client.currency', 'invoice.client.account.currency', 'invoice.client.account.account_gateways.gateway')->where('invitation_key', '=', $invitationKey)->firstOrFail();
-        $invoice = $invitation->invoice;
-        $client = $invoice->client;
-        $account = $client->account;
-        $accountGateway = $account->getGatewayByType(Session::get('payment_type'));
-        
-        /*
-        if ($onSite) {
-            $client->address1 = trim(Input::get('address1'));
-            $client->address2 = trim(Input::get('address2'));
-            $client->city = trim(Input::get('city'));
-            $client->state = trim(Input::get('state'));
-            $client->postal_code = trim(Input::get('postal_code'));
-            $client->save();
-        }
-        */
-        
+                        
         try {
             $gateway = self::createGateway($accountGateway);
             $details = self::getPaymentDetails($invitation, ($useToken || !$onSite) ? false : Input::all());
@@ -626,8 +648,9 @@ class PaymentController extends BaseController
         $invoice = $invitation->invoice;
         $accountGateway = $invoice->client->account->getGatewayByType(Session::get('payment_type'));
 
-        if ($invoice->account->account_key == NINJA_ACCOUNT_KEY) {
-            $account = Account::find($invoice->client->public_id);
+        if ($invoice->account->account_key == NINJA_ACCOUNT_KEY 
+                && $invoice->amount == PRO_PLAN_PRICE) {
+            $account = Account::with('users')->find($invoice->client->public_id);
             if ($account->pro_plan_paid && $account->pro_plan_paid != '0000-00-00') {
                 $date = DateTime::createFromFormat('Y-m-d', $account->pro_plan_paid);
                 $account->pro_plan_paid = $date->modify('+1 year')->format('Y-m-d');
@@ -635,6 +658,9 @@ class PaymentController extends BaseController
                 $account->pro_plan_paid = date_create()->format('Y-m-d');
             }
             $account->save();
+
+            $user = $account->users()->first();
+            $this->accountRepo->syncAccounts($user->id, $account->pro_plan_paid);
         }
 
         $payment = Payment::createNew($invitation);
@@ -676,6 +702,14 @@ class PaymentController extends BaseController
 
         $accountGateway = $invoice->client->account->getGatewayByType(Session::get('payment_type'));
         $gateway = self::createGateway($accountGateway);
+
+        // Check for Dwolla payment error
+        if ($accountGateway->isGateway(GATEWAY_DWOLLA) && Input::get('error')) {
+            $errorMessage = trans('texts.payment_error')."\n\n".Input::get('error_description');
+            Session::flash('error', $errorMessage);
+            Utils::logError($errorMessage);
+            return Redirect::to('view/'.$invitation->invitation_key);
+        }
 
         try {
             if (method_exists($gateway, 'completePurchase')) {
@@ -729,14 +763,19 @@ class PaymentController extends BaseController
                 ->withErrors($errors)
                 ->withInput();
         } else {
-            $this->paymentRepo->save($publicId, Input::all());
+            $payment = $this->paymentRepo->save($publicId, Input::all());
 
             if ($publicId) {
                 Session::flash('message', trans('texts.updated_payment'));
 
                 return Redirect::to('payments/');
             } else {
-                Session::flash('message', trans('texts.created_payment'));
+                if (Input::get('email_receipt')) {
+                    $this->contactMailer->sendPaymentConfirmation($payment);
+                    Session::flash('message', trans('texts.created_payment_emailed_client'));
+                } else {
+                    Session::flash('message', trans('texts.created_payment'));
+                }
 
                 return Redirect::to('clients/'.Input::get('client'));
             }

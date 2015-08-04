@@ -74,16 +74,19 @@ class Client extends EntityModel
 
     public function getName()
     {
-        return $this->getDisplayName();
+        return $this->name;
     }
-
+    
     public function getDisplayName()
     {
         if ($this->name) {
             return $this->name;
         }
+        
+        if (!$this->contacts || !count($this->contacts)) {
+            $this->load('contacts');
+        }
 
-        $this->load('contacts');
         $contact = $this->contacts()->first();
 
         return $contact->getDisplayName();
@@ -147,6 +150,19 @@ class Client extends EntityModel
     {
         $token = $this->getGatewayToken();
         return $token ? "https://dashboard.stripe.com/customers/{$token}" : false;
+    }
+
+    public function getCurrencyId()
+    {
+        if ($this->currency_id) {
+            return $this->currency_id;
+        }
+
+        if (!$this->account) {
+            $this->load('account');
+        }
+
+        return $this->account->currency_id ?: DEFAULT_CURRENCY;
     }
 }
 

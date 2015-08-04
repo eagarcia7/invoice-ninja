@@ -13,6 +13,8 @@ use Session;
 use Cookie;
 use Response;
 use App\Models\User;
+use App\Models\Account;
+use App\Models\Industry;
 use App\Ninja\Mailers\Mailer;
 use App\Ninja\Repositories\AccountRepository;
 use Redirect;
@@ -32,24 +34,16 @@ class AppController extends BaseController
 
     public function showSetup()
     {
-        if (Utils::isNinja() || Utils::isDatabaseSetup()) {
+        if (Utils::isNinja() || (Utils::isDatabaseSetup() && Account::count() > 0)) {
             return Redirect::to('/');
         }
 
-        $view = View::make('setup');
-
-        /*
-        $cookie = Cookie::forget('ninja_session', '/', 'www.ninja.dev');
-        Cookie::queue($cookie);
-        return Response::make($view)->withCookie($cookie);
-        */
-
-        return Response::make($view);
+        return View::make('setup');
     }
 
     public function doSetup()
     {
-        if (Utils::isNinja() || Utils::isDatabaseSetup()) {
+        if (Utils::isNinja() || (Utils::isDatabaseSetup() && Account::count() > 0)) {
             return Redirect::to('/');
         }
 
@@ -79,9 +73,8 @@ class AppController extends BaseController
             return Redirect::to('/setup')->withInput();
         }
         
-        // == ENV Settings (Production) == //
-        $config = "APP_ENV=development\n".
-                    "APP_DEBUG=true\n".
+        $config = "APP_ENV=production\n".
+                    "APP_DEBUG=false\n".
                     "APP_URL={$app['url']}\n".
                     "APP_KEY={$app['key']}\n\n".
                     "DB_TYPE={$dbType}\n".
@@ -95,7 +88,7 @@ class AppController extends BaseController
                     "MAIL_HOST={$mail['host']}\n".
                     "MAIL_USERNAME={$mail['username']}\n".
                     "MAIL_FROM_NAME={$mail['from']['name']}\n".
-                    "MAIL_PASSWORD={$mail['password']}\n";
+                    "MAIL_PASSWORD={$mail['password']}";
 
         // Write Config Settings
         $fp = fopen(base_path()."/.env", 'w');
@@ -105,7 +98,9 @@ class AppController extends BaseController
         // == DB Migrate & Seed == //
         // Artisan::call('migrate:rollback', array('--force' => true)); // Debug Purposes
         Artisan::call('migrate', array('--force' => true));
-        Artisan::call('db:seed', array('--force' => true));
+        if (Industry::count() == 0) {
+            Artisan::call('db:seed', array('--force' => true));
+        }
         Artisan::call('optimize', array('--force' => true));
         
         $firstName = trim(Input::get('first_name'));
@@ -114,8 +109,6 @@ class AppController extends BaseController
         $password = trim(Input::get('password'));
         $account = $this->accountRepo->create($firstName, $lastName, $email, $password);
         $user = $account->users()->first();
-
-        //Auth::login($user, true);
 
         return Redirect::to('/login');
     }
@@ -169,7 +162,9 @@ class AppController extends BaseController
         if (!Utils::isNinja() && !Utils::isDatabaseSetup()) {
             try {
                 Artisan::call('migrate', array('--force' => true));
-                Artisan::call('db:seed', array('--force' => true));
+                if (Industry::count() == 0) {
+                    Artisan::call('db:seed', array('--force' => true));
+                }
                 Artisan::call('optimize', array('--force' => true));
             } catch (Exception $e) {
                 Response::make($e->getMessage(), 500);

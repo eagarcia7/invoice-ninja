@@ -22,6 +22,11 @@ class Payment extends EntityModel
         return $this->belongsTo('App\Models\Client')->withTrashed();
     }
 
+    public function user()
+    {
+        return $this->belongsTo('App\Models\User')->withTrashed();
+    }
+
     public function account()
     {
         return $this->belongsTo('App\Models\Account');
@@ -34,7 +39,7 @@ class Payment extends EntityModel
 
     public function getAmount()
     {
-        return Utils::formatMoney($this->amount, $this->client->currency_id);
+        return Utils::formatMoney($this->amount, $this->client->getCurrencyId());
     }
 
     public function getName()
